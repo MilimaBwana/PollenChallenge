@@ -128,14 +128,14 @@ POLLEN_DIR_MATCHER = {
         "Urticaceae": "Urticaceae"
     }
 """
-# Pollen_dir_matcher with renaming
+# Pollen_dir_matcher with renamingw
 POLLEN_DIR_MATCHER = {
     # Wrong word : Correct Word
     "Betula2": "Betula",
     "Betula1": "Betula",
     "Cupressaceae1": "Cupressaceae",
     "CupressaceaeCupressaceae": "Cupressaceae",
-    "Chenopodium": "Chenipodiaceae",
+    "Chenopodium": "Chenopodiaceae",
     "Coyrlus": "Corylus",
     "Pinus": "Pinaceae",
     "Populus1": "Populus",
@@ -145,6 +145,7 @@ POLLEN_DIR_MATCHER = {
 }
 
 """ Data directory contains the folders with different classes. """
+# TODO: to be edited, if new dataset
 if re.match('eihw-gpu[0-4]', platform.node()):
     """ Eihw cluster """
     DATA_DIR = "/nas/student/JakobSchaefer/data"
@@ -167,52 +168,10 @@ UPSAMPLE_NAME = 'upsample'
 DOWNSAMPLE_NAME = 'downsample'
 ORIGINAL_NAME = 'original'
 
-# TODO: to be edited, if new dataset
-""" 34 classes dataset.py 'Augsburg' """
-TFRECORD_TRAIN_ORIGINAL_31 = DATA_DIR_31 + '/' + ORIGINAL_NAME + '_31_traindata.tfrecords'
-TFRECORD_VAL_ORIGINAL_31 = DATA_DIR_31 + '/' + ORIGINAL_NAME + '_31_valdata.tfrecords'
-TFRECORD_TEST_ORIGINAL_31 = DATA_DIR_31 + '/' + ORIGINAL_NAME + '_31_testdata.tfrecords'
-COUNT_JSON_ORIGINAL_31 = DATA_DIR_31 + '/' + ORIGINAL_NAME + '_31_count_classes.json'
-
-TFRECORD_TRAIN_UPSAMPLE_31 = DATA_DIR_31 + '/' + UPSAMPLE_NAME + '_31_traindata.tfrecords'
-TFRECORD_VAL_UPSAMPLE_31 = DATA_DIR_31 + '/' + UPSAMPLE_NAME + '_31_valdata.tfrecords'
-TFRECORD_TEST_UPSAMPLE_31 = DATA_DIR_31 + '/' + UPSAMPLE_NAME + '_31_testdata.tfrecords'
-COUNT_JSON_UPSAMPLE_31 = DATA_DIR_31 + '/' + UPSAMPLE_NAME + '_31_count_classes.json'
-
-TFRECORD_TRAIN_DOWNSAMPLE_31 = DATA_DIR_31 + '/' + DOWNSAMPLE_NAME + '_31_traindata.tfrecords'
-TFRECORD_VAL_DOWNSAMPLE_31 = DATA_DIR_31 + '/' + DOWNSAMPLE_NAME + '_31_valdata.tfrecords'
-TFRECORD_TEST_DOWNSAMPLE_31 = DATA_DIR_31 + '/' + DOWNSAMPLE_NAME + '_31_testdata.tfrecords'
-COUNT_JSON_DOWNSAMPLE_31 = DATA_DIR_31 + '/' + DOWNSAMPLE_NAME + '_31_count_classes.json'
-
-""" 15 classes dataset.py 'Augsburg' """
-TFRECORD_TRAIN_ORIGINAL_15 = DATA_DIR_15 + '/' + ORIGINAL_NAME + '_15_traindata.tfrecords'
-TFRECORD_VAL_ORIGINAL_15 = DATA_DIR_15 + '/' + ORIGINAL_NAME + '_15_valdata.tfrecords'
-TFRECORD_TEST_ORIGINAL_15 = DATA_DIR_15 + '/' + ORIGINAL_NAME + '_15_testdata.tfrecords'
-COUNT_JSON_ORIGINAL_15 = DATA_DIR_15 + '/' + ORIGINAL_NAME + '_15_count_classes.json'
 CSV_TRAIN_LABELS_15 = DATA_DIR_15 + '/labels_train.csv'
 CSV_VAL_LABELS_15 = DATA_DIR_15 + '/labels_devel.csv'
 CSV_TEST_LABELS_15 = DATA_DIR_15 + '/labels_test.csv'
 
-TFRECORD_TRAIN_UPSAMPLE_15 = DATA_DIR_15 + '/' + UPSAMPLE_NAME + '_15_traindata.tfrecords'
-TFRECORD_VAL_UPSAMPLE_15 = DATA_DIR_15 + '/' + UPSAMPLE_NAME + '_15_valdata.tfrecords'
-TFRECORD_TEST_UPSAMPLE_15 = DATA_DIR_15 + '/' + UPSAMPLE_NAME + '_15_testdata.tfrecords'
-COUNT_JSON_UPSAMPLE_15 = DATA_DIR_15 + '/' + UPSAMPLE_NAME + '_15_count_classes.json'
-
-TFRECORD_TRAIN_DOWNSAMPLE_15 = DATA_DIR_15 + '/' + DOWNSAMPLE_NAME + '_15_traindata.tfrecords'
-TFRECORD_VAL_DOWNSAMPLE_15 = DATA_DIR_15 + '/' + DOWNSAMPLE_NAME + '_15_valdata.tfrecords'
-TFRECORD_TEST_DOWNSAMPLE_15 = DATA_DIR_15 + '/' + DOWNSAMPLE_NAME + '_15_testdata.tfrecords'
-COUNT_JSON_DOWNSAMPLE_15 = DATA_DIR_15 + '/' + DOWNSAMPLE_NAME + '_15_count_classes.json'
-
-""" 4 classes dataset.py 'Italia' """
-TFRECORD_TRAIN_ORIGINAL_4 = DATA_DIR_4 + '/' + ORIGINAL_NAME + '_4_traindata.tfrecords'
-TFRECORD_VAL_ORIGINAL_4 = DATA_DIR_4 + '/' + ORIGINAL_NAME + '_4_valdata.tfrecords'
-TFRECORD_TEST_ORIGINAL_4 = DATA_DIR_4 + '/' + ORIGINAL_NAME + '_4_testdata.tfrecords'
-COUNT_JSON_ORIGINAL_4 = DATA_DIR_4 + '/' + ORIGINAL_NAME + '_4_count_classes.json'
-
-TFRECORD_TRAIN_DOWNSAMPLE_4 = DATA_DIR_4 + '/' + UPSAMPLE_NAME + '_4_traindata.tfrecords'
-TFRECORD_VAL_DOWNSAMPLE_4 = DATA_DIR_4 + '/' + UPSAMPLE_NAME + '_4_valdata.tfrecords'
-TFRECORD_TEST_DOWNSAMPLE_4 = DATA_DIR_4 + '/' + UPSAMPLE_NAME + '_testdata.tfrecords'
-COUNT_JSON_DOWNSAMPLE_4 = DATA_DIR_4 + '/' + UPSAMPLE_NAME + '_4_count_classes.json'
 
 TRAIN_SPLIT = 0.6
 VAL_SPLIT = 0.2

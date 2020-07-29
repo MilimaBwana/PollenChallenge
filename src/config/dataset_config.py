@@ -20,76 +20,77 @@ class Dataset:
 
         self.__ds_name = name
         self.__num_classes = int(name.split('_')[1])
-        #TODO: to be edited, if new dataset
+        num_classes = str(self.__num_classes)
+        # TODO: to be edited, if new dataset
         if name == 'original_15':
             self.__data_dir = cfg.DATA_DIR_15
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_ORIGINAL_15
-            self.__tf_record_val = cfg.TFRECORD_VAL_ORIGINAL_15
-            self.__tf_record_test = cfg.TFRECORD_TEST_ORIGINAL_15
-            self.__count_json = cfg.COUNT_JSON_ORIGINAL_15
+            self.__tf_record_train = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_15
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_15
             self.__num_bottom_classes = 11
         elif name == 'upsample_15':
             self.__data_dir = cfg.DATA_DIR_15
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_UPSAMPLE_15
-            self.__tf_record_val = cfg.TFRECORD_VAL_UPSAMPLE_15
-            self.__tf_record_test = cfg.TFRECORD_TEST_UPSAMPLE_15
-            self.__count_json = cfg.COUNT_JSON_UPSAMPLE_15
+            self.__tf_record_train = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_15
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_15
             self.__num_bottom_classes = 11
         elif name == 'downsample_15':
             self.__data_dir = cfg.DATA_DIR_15
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_DOWNSAMPLE_15
-            self.__tf_record_val = cfg.TFRECORD_VAL_DOWNSAMPLE_15
-            self.__tf_record_test = cfg.TFRECORD_TEST_DOWNSAMPLE_15
-            self.__count_json = cfg.COUNT_JSON_UPSAMPLE_15
+            self.__tf_record_train = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_15
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_15
             self.__num_bottom_classes = 11
         elif name == 'original_31':
             self.__data_dir = cfg.DATA_DIR_31
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_ORIGINAL_31
-            self.__tf_record_val = cfg.TFRECORD_VAL_ORIGINAL_31
-            self.__tf_record_test = cfg.TFRECORD_TEST_ORIGINAL_31
-            self.__count_json = cfg.COUNT_JSON_ORIGINAL_31
+            self.__tf_record_train = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_31
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_31
             self.__num_bottom_classes = 27
         elif name == 'upsample_31':
             self.__data_dir = cfg.DATA_DIR_31
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_UPSAMPLE_31
-            self.__tf_record_val = cfg.TFRECORD_VAL_UPSAMPLE_31
-            self.__tf_record_test = cfg.TFRECORD_TEST_UPSAMPLE_31
-            self.__count_json = cfg.COUNT_JSON_UPSAMPLE_31
+            self.__tf_record_train = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_31
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_31
             self.__num_bottom_classes = 27
         elif name == 'downsample_31':
             self.__data_dir = cfg.DATA_DIR_31
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_DOWNSAMPLE_31
-            self.__tf_record_val = cfg.TFRECORD_VAL_DOWNSAMPLE_31
-            self.__tf_record_test = cfg.TFRECORD_TEST_DOWNSAMPLE_31
-            self.__count_json = cfg.COUNT_JSON_DOWNSAMPLE_31
+            self.__tf_record_train = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.DOWNSAMPLE_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_31
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_31
             self.__num_bottom_classes = 27
         elif name == 'original_4':
             self.__data_dir = cfg.DATA_DIR_4
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_ORIGINAL_4
-            self.__tf_record_val = cfg.TFRECORD_VAL_ORIGINAL_4
-            self.__tf_record_test = cfg.TFRECORD_TEST_ORIGINAL_4
-            self.__count_json = cfg.COUNT_JSON_ORIGINAL_4
+            self.__tf_record_train = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.ORIGINAL_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_4
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_4
             self.__num_bottom_classes = 3
         elif name == 'upsample_4':
             self.__data_dir = cfg.DATA_DIR_4
-            self.__tf_record_train = cfg.TFRECORD_TRAIN_DOWNSAMPLE_4
-            self.__tf_record_val = cfg.TFRECORD_VAL_DOWNSAMPLE_4
-            self.__tf_record_test = cfg.TFRECORD_TEST_DOWNSAMPLE_4
-            self.__count_json = cfg.COUNT_JSON_DOWNSAMPLE_4
+            self.__tf_record_train = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_traindata.tfrecords'
+            self.__tf_record_val = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_valdata.tfrecords'
+            self.__tf_record_test = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_testdata.tfrecords'
+            self.__count_json = self.__data_dir + '/' + cfg.UPSAMPLE_NAME + '_' + num_classes + '_count_classes.json'
             self.__dictionary = cfg.DICT_CLASSES_4
             self.__reverse_dictionary = cfg.REVERSE_DICT_CLASSES_4
             self.__num_bottom_classes = 3
@@ -97,6 +98,7 @@ class Dataset:
             raise ValueError('No valid dataset')
 
     """ Only allow read on variables"""
+
     def __get_name(self):
         return self.__ds_name
 
@@ -137,4 +139,3 @@ class Dataset:
     dictionary = property(__get_dictionary)
     reverse_dictionary = property(__get_reverse_dictionary)
     num_bottom_classes = property(__get_num_bottom_classes)
-
