@@ -31,7 +31,7 @@ def _matplotlib_confusion_matrix(cm, class_names, title='Confusion matrix'):
     plt.xticks(tick_marks, class_names, rotation=45)
     plt.yticks(tick_marks, class_names)
 
-    """ Use white text if squares are dark; otherwise black text. """
+    # Use white text if squares are dark; otherwise black text.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         color = 'white' if cm[i, j] > threshold else 'black'
         plt.text(j, i, cm[i, j], horizontalalignment='center', color=color)
@@ -51,15 +51,15 @@ def _plot_to_image(figure):
 
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
-    """ Closing the figure prevents it from being displayed directly.
-    Note: Debugging delivers empty buffer. """
+    # Closing the figure prevents it from being displayed directly.
+    # Note: Debugging delivers empty buffer.
     plt.close(figure)
-    """ Set buffer pointer to start. """
+    # Set buffer pointer to start.
     buf.seek(0)
-    """ Convert the PNG Buffer to a TF Image. """
+    # Convert the PNG Buffer to a TF Image.
     image = tf.image.decode_png(buf.getvalue(), channels=4)
-    #buf.close()
-    """ Add the batch dimension. """
+    buf.close()
+    # Add the batch dimension.
     image = tf.expand_dims(image, 0)
     return image
 

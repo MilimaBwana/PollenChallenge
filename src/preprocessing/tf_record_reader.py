@@ -31,10 +31,12 @@ def read(mode, params):
 
     # Tests
     #for x in ds:
-    #    _parse_example(x, params, mode)
+    #     __parse_example(x, params, mode)
     ds = ds.map(lambda x: __parse_example(x, params, mode), num_parallel_calls=8)
-    # ds = ds.filter(lambda img, label: __filter_big_images(img, params))
-    ds = ds.batch(batch_size=params['batch_size'], drop_remainder=True)
+    if mode == tf.estimator.ModeKeys.TRAIN or mode == tf.estimator.ModeKeys.EVAL:
+        ds = ds.batch(batch_size=params['batch_size'], drop_remainder=True)
+    elif mode == tf.estimator.ModeKeys.PREDICT:
+        ds = ds.batch(batch_size=1, drop_remainder=False)
     ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
     return ds
@@ -45,8 +47,8 @@ def __parse_example(serialized_example, params, mode):
     @param serialized_example: one serialized example out of a tf record.
     @param params: dictionary containing important hyperparameters. Must contain
             'batch_size', 'input_shape', 'augmentation' and 'colormap' as a key.
-            If 'augmentation', the 'augmentation_techniques' is also needed.
-            If a transfer learning model is trained, 'backbone' is necessary.
+            If 'augmentation', the 'augmentation_techniques' key is also needed.
+            If a model using transfer learning  is trained, 'backbone' key is necessary.
     @return a parsed (image, label, filename)-tuple.
     """
     context, sequence = tf.io.parse_single_sequence_example(
@@ -57,7 +59,7 @@ def __parse_example(serialized_example, params, mode):
             'filename': tf.io.FixedLenFeature([], tf.string)
         })
 
-    """ if params['input_shape'][2] = 1, then grayscale, if = 3, then RGB image """
+    # if params['input_shape'][2] = 1, then grayscale, if = 3, then RGB image
     img = tf.image.decode_png(context['image_raw'], channels=params['input_shape'][2])
     img = tf.cast(img, dtype=tf.float32)
 
@@ -65,14 +67,14 @@ def __parse_example(serialized_example, params, mode):
         img = __augment(img, params)
 
     if tf.shape(img)[0] <= params['input_shape'][0] and tf.shape(img)[1] <= params['input_shape'][1]:
-        """ Embed the image into a black background, if image is smaller than target size. """
+        # Embed the image into a black background, if image is smaller than target size.
         offset_height = (params['input_shape'][0] - tf.shape(img)[0]) // 2
         offset_width = (params['input_shape'][1] - tf.shape(img)[1]) // 2
         img = tf.image.pad_to_bounding_box(img, offset_height=offset_height, offset_width=offset_width,
                                            target_height=params['input_shape'][0],
                                            target_width=params['input_shape'][1])
     else:
-        """ Resize while keeping the aspect ratio the same without distortion if image larger than target size """
+        # Resize while keeping the aspect ratio the same without distortion if image larger than target size.
         img = tf.image.resize_with_pad(img, target_height=params['input_shape'][0],
                                        target_width=params['input_shape'][1])
 
@@ -80,7 +82,7 @@ def __parse_example(serialized_example, params, mode):
         img = __apply_color_map(img, params)
 
     if 'backbone' in params:
-        """ If transfer learning is used, preprocesses according to used backbone. """
+        # If transfer learning is used, preprocesses according to used backbone.
         #TODO: To be edited if new backbone
         if params['backbone'].lower() == 'vgg16':
             img = tf.keras.applications.vgg16.preprocess_input(
@@ -102,7 +104,6 @@ def __parse_example(serialized_example, params, mode):
 
     else:
         img = img / 255  # normalize to [0,1]
-        # img = (2 * img / 255) - 1  # normalize to [-1,1]
 
     label = tf.cast(context['label'], tf.int64)
     filename = tf.cast(context['filename'], tf.string)
@@ -127,16 +128,15 @@ def __apply_color_map(img, params):
     @param params: dictionary, which must contain 'colormap'.
     @return: a colormapped image.
     """
+
+    def __cv2_apply_color_map(img, colormap):
+        if colormap == 'viridis':
+            # cv2 only allows uint8 images for colormapping.
+            img = cv.applyColorMap(np.uint8(img), cv.COLORMAP_VIRIDIS)
+
+        return img
     if params['colormap'].lower() == 'viridis':
         img = tf.py_function(func=__cv2_apply_color_map, inp=[img, params['colormap']], Tout=tf.float32)
-    return img
-
-
-def __cv2_apply_color_map(img, colormap):
-    if colormap == 'viridis':
-        """ cv2 only allows uint8 images for colormapping. """
-        img = cv.applyColorMap(np.uint8(img), cv.COLORMAP_VIRIDIS)
-
     return img
 
 
@@ -159,7 +159,7 @@ def __augment(img, params):
 
     input_shape = params['input_shape']
     for augmentation in augmentations:
-        """ Probability of augmenting is 0.25 """
+        # Probability of augmenting is 0.25 """
         if augmentation in augmentation_functions.keys():
             f = augmentation_functions[augmentation]
             img = tf.cond(tf.random.uniform([], 0, 1) >= 0.75, lambda: f(img, input_shape), lambda: img)
@@ -181,7 +181,7 @@ def __crop(img, input_shape):
                           dtype=tf.int32)
     crop_width = tf.cast(width * tf.random.uniform(shape=[], minval=0.85, maxval=0.99, dtype=tf.float32),
                          dtype=tf.int32)
-    """ if params['input_shape'][2] = 1, then grayscale, if = 3 then RGB image """
+    # if params['input_shape'][2] = 1, then grayscale, if = 3 then RGB image
     img = tf.image.random_crop(img, [crop_height, crop_width, input_shape[2]])
     return img
 
@@ -192,23 +192,24 @@ def __rotate(img, input_shape):
     @param input_shape: shape of the outputted image.
     @return: the rotated image.
     """
-    degree = tf.random.uniform([], -45, 45, tf.dtypes.float32)
-    img = tf.py_function(func=__cv2_rotate, inp=[img, degree], Tout=tf.float32)
+
+    def __cv2_rotate(image):
+        """ Rotates the image by random degree. """
+        num_rows, num_cols = image.shape[:2]
+        deg = np.float64(np.random.uniform(-45, 45, size=1)) # For some reason deg must be float64, not float32
+        rotation_matrix = cv.getRotationMatrix2D((num_cols / 2, num_rows / 2), deg, 1)
+        image = cv.warpAffine(np.float32(image), rotation_matrix, (num_cols, num_rows))
+        # In case of only one channel, warpAffine removes channel dimension.
+
+        return image
+
+    #deg = tf.random.uniform([], -45, 45, tf.dtypes.float64)
+    img = tf.py_function(func=__cv2_rotate, inp=[img], Tout=tf.float32)
     if input_shape[2] == 1:
-        """ In case of only one channel, _cv2_rotate removes channel dimension, which needs to be added afterwards. """
+        # In case of only one channel, _cv2_rotate removes channel dimension, which needs to be added afterwards.
         img = tf.expand_dims(img, axis=-1)
     return img
 
-
-def __cv2_rotate(img, degree):
-    """ Rotates the image by degree. """
-    num_rows, num_cols = img.shape[:2]
-
-    rotation_matrix = cv.getRotationMatrix2D((num_cols / 2, num_rows / 2), degree, 1)
-    img = cv.warpAffine(np.float32(img), rotation_matrix, (num_cols, num_rows))
-    """ In case of only one channel, warpAffine removes channel dimension."""
-
-    return img
 
 
 def __flip_left_right(image, input_shape):

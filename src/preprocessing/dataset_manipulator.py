@@ -5,11 +5,9 @@ import numpy as np
 import cv2 as cv
 import shutil
 import argparse
-import re
 from collections import Counter
 
-""" Syspath needs to include parent directory "pollen classification" and "Code" to find sibling 
-modules and database."""
+""" Syspath needs to include parent directory "pollen_classification" to find sibling modules ."""
 
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + "/"
 sys.path.append(file_path)
@@ -29,12 +27,12 @@ def main():
                         help='Determines maximum m of upsampled images for each class. The threshold equals m times'
                              'number of samples in the respective class.')
     parser.add_argument('--dataset_name', type=str,
-                        help='Used Dataset. Original_15, original_31 or original_4')
+                        help='Used Dataset. Upsample_4 or original_4')
 
     args = parser.parse_args()
     max_fraction = 0.1
     max_multiplication = 5
-    dataset_name = 'original_31'
+    dataset_name = 'original_4'
 
     if args.max_fraction:
         max_fraction = args.max_fraction
@@ -69,26 +67,25 @@ def upsample_data(dataset, max_fraction=None, max_multiplication=None):
     max_fraction = 1 if max_fraction is None else max_fraction
     max_multiplication = np.Inf if max_multiplication is None else max_multiplication
 
-    reverse_dict = dataset.reverse_dictionary
     labeled_subdirectories = pipeline_ops.get_labeled_valid_subdirectories(dataset.name, dataset.data_dir,
-                                                                           dataset.dictionary,
+                                                                           dataset.reverse_dictionary,
                                                                            consider_misspelled=True, mask='object')
     labeled_file_paths = pipeline_ops.get_labeled_png_paths(labeled_subdirectories)
     counter_classes = Counter([c[1] for c in labeled_file_paths])
 
-    """ threshold_samples_1 = threshold  * max_number_of_files in one class."""
+    # threshold_samples_1 = threshold  * max_number_of_files in one class.
     threshold_samples = int(max(counter_classes.values()) * max_fraction)
 
     for key in counter_classes:
 
         if counter_classes[key] < threshold_samples:
-            """ Upsample data. Number of images to upsample is the minimum of the 2 thresholds."""
+            # Upsample data. Number of images to upsample is the minimum of the 2 thresholds.
             number_upsampling = int(min(threshold_samples - counter_classes[key],
                                           counter_classes[key] * max_multiplication))
-            print('Upsample: ' + str(reverse_dict[key]) + ' ' + str(number_upsampling))
+            print('Upsample: ' + str(dataset.dictionary[key]) + ' ' + str(number_upsampling))
 
             base_directories = [path[0] for path in labeled_subdirectories if key == path[1]]
-            save_directory = [x for x in base_directories if os.path.basename(x) in dataset.dictionary][
+            save_directory = [x for x in base_directories if os.path.basename(x) in dataset.reverse_dictionary][
                                  0] + cfg.UPSAMPLE_DIR_EXTENSION
             Path(save_directory).mkdir(parents=True, exist_ok=True)
 
@@ -106,7 +103,7 @@ def upsample_data(dataset, max_fraction=None, max_multiplication=None):
 
 def delete_upsampled_data(dataset):
     """
-    Deletes each directory with the extension 'cfg.UPSAMPLE_DIR_EXTENSION' and its content.
+    Deletes the content of each directory with the extension 'cfg.UPSAMPLE_DIR_EXTENSION' and the directory itself.
     @param dataset: Instance of dataset_config.Dataset
     @return Nothing
     """

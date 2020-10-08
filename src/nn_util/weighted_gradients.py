@@ -14,7 +14,7 @@ def create_frequency_dict(count_classes_json):
 
     freq = defaultdict()
     for key, value in count_classes_dict.items():
-        """ Cast key to int. """
+        # Cast key to int.
         freq[int(key)] = value
 
     frequency_dict = tf.lookup.StaticHashTable(
@@ -64,7 +64,9 @@ def beta_frequency_weighted_loss(per_sample_loss, frequency_dict, labels, beta=0
     max_frequency = tf.math.reduce_max(frequency_dict.export()[1])
     weights = tf.map_fn(
         lambda x: tf.math.divide_no_nan(1 - beta, 1 - tf.math.pow(beta, tf.math.divide_no_nan(frequency_dict.lookup(
-            tf.cast(x, dtype=tf.int32)), max_frequency))),
+                                                                                                  tf.cast(x,
+                                                                                                    dtype=tf.int32)),
+                                                                                              max_frequency))),
         elems=labels,
         dtype=tf.float32)
     per_sample_loss = tf.compat.v1.losses.compute_weighted_loss(
@@ -115,12 +117,13 @@ def beta_weighted_focal_loss(per_sample_loss, frequency_dict, logits, labels, ga
         frequency of the class c.
     @return non reduced beta weighted focal loss of the mini-batch.
     """
-
     y_pred = tf.argmax(logits, axis=-1)
     max_frequency = tf.math.reduce_max(frequency_dict.export()[1])
     alpha_factor = tf.map_fn(
-        lambda x: tf.math.divide_no_nan(1 - beta, 1 - tf.math.pow(beta, tf.math.divide_no_nan(frequency_dict.lookup(
-            tf.cast(x, dtype=tf.int32)), max_frequency))),
+        lambda x: tf.math.divide_no_nan(1 - beta, 1 - tf.math.pow(beta, tf.math.divide_no_nan(max_frequency,
+                                                                                              frequency_dict.lookup(
+                                                                                                  tf.cast(x,
+                                                                                                          dtype=tf.int32))))),
         elems=labels,
         dtype=tf.float32)
 

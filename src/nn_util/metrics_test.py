@@ -4,8 +4,8 @@ import pytest
 import numpy as np
 import sklearn.metrics
 
-""" Syspath needs to include parent directory "pollen classification" and "Code" to find sibling 
-modules. """
+""" Syspath needs to include parent directory "pollen classification" and "src" to find sibling 
+modules and database."""
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + "/"
 sys.path.append(file_path)
 

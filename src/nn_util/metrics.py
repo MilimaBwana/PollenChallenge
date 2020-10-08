@@ -12,10 +12,12 @@ class MultiClassPrecision(tf.keras.metrics.Metric):
         top_k: if set, then so only top_k classes regarding frequency are
             considered for calculating the average precision. If top_k is negative, the bottom_k classes regarding
             frequency are considered for calculating the average precision.
+        from_logits: Whether y_pred is expected to be a logits tensor ( a probability distribution).
+            By default, we assume that y_pred encodes predicted labels.
         name: name of this metric.
     """
 
-    def __init__(self, num_classes, reduce="macro", top_k=np.Inf,
+    def __init__(self, num_classes, reduce="macro", top_k=np.Inf, from_logits = False,
                  name="multiclass_precision", **kwargs):
         super().__init__(name=name)
         self.num_classes = num_classes
@@ -31,6 +33,7 @@ class MultiClassPrecision(tf.keras.metrics.Metric):
             self.top_k = tf.cast(top_k, dtype=tf.int32)
         assert (tf.math.abs(self.top_k) <= num_classes), "The top-k amount must be less than or equal to num_classes"
 
+        self.from_logits = from_logits
         self.confusion_matrix = self.add_weight(
             "conf_mtx",
             shape=(self.num_classes, self.num_classes),
@@ -40,14 +43,17 @@ class MultiClassPrecision(tf.keras.metrics.Metric):
         self.precision = self.add_weight(name='mp', initializer='zeros')
 
     def update_state(self, y_true, y_pred, sample_weights=None):
-        """ Updates the confusion matrix and metric value. y_true and y_pred need to have same shape.
+        """ Updates the confusion matrix and metric value.
         @param y_true: groundtruth labels.
         @param y_pred: predicted labels
         @param sample_weights: not used.
         """
 
-        y_true = tf.squeeze(y_true)
-        y_pred = tf.squeeze(y_pred)
+        if self.from_logits:
+            y_pred = tf.argmax(y_pred, axis=-1)
+
+        #y_true = tf.squeeze(y_true)
+        #y_pred = tf.squeeze(y_pred)
         new_conf_mtx = tf.math.confusion_matrix(
             labels=y_true,
             predictions=y_pred,
@@ -103,10 +109,13 @@ class MultiClassRecall(tf.keras.metrics.Metric):
         top_k: if set, then so only top_k classes regarding frequency are
             considered for calculating the average recall. If top_k is negative, the bottom_k classes regarding
             frequency are considered for calculating the average recall.
+        from_logits: Whether y_pred is expected to be a logits tensor ( a probability distribution).
+            By default, we assume that y_pred encodes predicted labels.
+
         name: name of this metric.
     """
 
-    def __init__(self, num_classes, reduce="macro", top_k=np.Inf,
+    def __init__(self, num_classes, reduce="macro", top_k=np.Inf, from_logits = False,
                  name="multiclass_recall", **kwargs):
         super().__init__(name=name)
         self.num_classes = num_classes
@@ -122,6 +131,7 @@ class MultiClassRecall(tf.keras.metrics.Metric):
             self.top_k = tf.cast(top_k, dtype=tf.int32)
         assert (tf.math.abs(self.top_k) <= num_classes), "The top-k amount must be less than or equal to num_classes"
 
+        self.from_logits = from_logits
         self.confusion_matrix = self.add_weight(
             "conf_mtx",
             shape=(self.num_classes, self.num_classes),
@@ -131,13 +141,15 @@ class MultiClassRecall(tf.keras.metrics.Metric):
         self.recall = self.add_weight(name='mp', initializer='zeros')
 
     def update_state(self, y_true, y_pred, sample_weights=None):
-        """ Updates the confusion matrix and metric value. y_true and y_pred need to have same shape.
+        """ Updates the confusion matrix and metric value.
         @param y_true: groundtruth labels.
         @param y_pred: predicted labels
         @param sample_weights: not used.
         """
-        y_true = tf.squeeze(y_true)
-        y_pred = tf.squeeze(y_pred)
+
+        if self.from_logits:
+            y_pred = tf.argmax(y_pred, axis=-1)
+
         new_conf_mtx = tf.math.confusion_matrix(
             labels=y_true,
             predictions=y_pred,
@@ -162,7 +174,7 @@ class MultiClassRecall(tf.keras.metrics.Metric):
                 tf.math.divide_no_nan(tf.math.reduce_sum(recall_per_class),
                                       num_classes_with_samples))
         elif self.reduce == "micro":
-            """ Always yields: micro-recall=micro-precision=micro-f1score """
+            # Always yields: micro-recall=micro-precision=micro-f1score
             top_k_cm = _get_top_k_cm(self.confusion_matrix, self.num_classes, self.top_k)
             weights = tf.math.divide_no_nan(tf.reduce_sum(top_k_cm, axis=-1), tf.reduce_sum(
                 top_k_cm))
@@ -194,11 +206,13 @@ class MultiClassF1Score(tf.keras.metrics.Metric):
         top_k: if set, then so only top_k classes regarding frequency are
             considered for calculating the average the f1-score. If top_k is negative, the bottom_k classes regarding
             frequency are considered for calculating the average the f1-score.
+        from_logits: Whether y_pred is expected to be a logits tensor ( a probability distribution).
+            By default, we assume that y_pred encodes predicted labels.
         name: name of this metric.
     """
 
     def __init__(self, num_classes,
-                 reduce="macro", top_k=np.Inf,
+                 reduce="macro", top_k=np.Inf, from_logits=False,
                  name="multiclass_f1score", **kwargs):
         super().__init__(name=name)
         self.num_classes = num_classes
@@ -214,6 +228,7 @@ class MultiClassF1Score(tf.keras.metrics.Metric):
             self.top_k = tf.cast(top_k, dtype=tf.int32)
         assert (tf.math.abs(self.top_k) <= num_classes), "The top-k amount must be less than or equal to num_classes"
 
+        self.from_logits = from_logits
         self.confusion_matrix = self.add_weight(
             "conf_mtx",
             shape=(self.num_classes, self.num_classes),
@@ -228,8 +243,10 @@ class MultiClassF1Score(tf.keras.metrics.Metric):
         @param y_pred: predicted labels
         @param sample_weights: not used.
         """
-        y_true = tf.squeeze(y_true)
-        y_pred = tf.squeeze(y_pred)
+        #y_true = tf.squeeze(y_true)
+        #y_pred = tf.squeeze(y_pred)
+        if self.from_logits:
+            y_pred = tf.argmax(y_pred, axis=-1)
         new_conf_mtx = tf.math.confusion_matrix(
             labels=y_true,
             predictions=y_pred,
@@ -255,10 +272,10 @@ class MultiClassF1Score(tf.keras.metrics.Metric):
         idx_top_k = _get_top_k_cm_indices(self.confusion_matrix, self.num_classes, self.top_k)
 
         if self.reduce == "macro":
-            """ Macro-averaged f1 score is calculated by dividing the f1-score per class by the number of classes with 
-            samples. Only the top_k classes regarding class frequency are considered.
-            There is another definition of macro f1-score, which calculated the harmonic mean of the
-            macro-weighted precision and the macro-weighted recall, which is not used here. """
+            # Macro-averaged f1 score is calculated by dividing the f1-score per class by the number of classes with
+            # samples. Only the top_k classes regarding class frequency are considered.
+            # There is another definition of macro f1-score, which calculated the harmonic mean of the
+            # macro-weighted precision and the macro-weighted recall, which is not used here.
             f1_score_per_class = tf.gather(f1_score_per_class, indices=idx_top_k, axis=0)
             num_classes_with_samples = _get_num_classes_with_samples(self.confusion_matrix, self.num_classes,
                                                                      self.top_k)
@@ -266,7 +283,7 @@ class MultiClassF1Score(tf.keras.metrics.Metric):
                 tf.math.divide_no_nan(tf.math.reduce_sum(f1_score_per_class),
                                       num_classes_with_samples))
         else:
-            """ Always yields: micro-recall=micro-precision=micro-f1score, if top_k = num_classes """
+            # Always yields: micro-recall=micro-precision=micro-f1score, if top_k = num_classes
             top_k_cm = _get_top_k_cm(self.confusion_matrix, self.num_classes, self.top_k)
             weights = tf.math.divide_no_nan(tf.reduce_sum(top_k_cm, axis=-1), tf.reduce_sum(
                 top_k_cm))
@@ -297,10 +314,10 @@ def _get_top_k_cm_indices(cm, num_classes, top_k):
     assert abs(top_k) <= num_classes, "Top_k must be <= abs(num_classes)"
 
     if top_k >= 0:
-        """ top_k classes"""
+        # top_k classes
         _, idx_top_k = tf.math.top_k(tf.reduce_sum(cm, axis=-1), k=top_k)
     else:
-        """ bottom k_classes """
+        # bottom k_classes
         _, idx_all = tf.math.top_k(tf.reduce_sum(cm, axis=-1), k=num_classes)
         idx_top_k = tf.slice(idx_all, [num_classes + top_k], size=[-top_k])
 
@@ -332,9 +349,9 @@ def _get_top_k_cm(cm, num_classes, top_k):
     @return sliced confusion matrix.
     """
 
-    """ Get indices of top_k classes with the most samples"""
+    # Get indices of top_k classes with the most samples
     idx_top_k = _get_top_k_cm_indices(cm, num_classes, top_k)
-    """ Slice confusion matrix, so only top_k/bottom_k classes are considered. """
+    # Slice confusion matrix, so only top_k/bottom_k classes are considered.
     top_k_confusion_matrix = tf.gather(tf.gather(cm, indices=idx_top_k, axis=0),
                                        indices=idx_top_k, axis=-1)
 

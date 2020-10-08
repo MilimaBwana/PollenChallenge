@@ -1,7 +1,7 @@
 import tensorflow as tf
-import json
-import os
+from pathlib import Path
 from collections import defaultdict
+import json
 
 
 def __bytes_feature(value):
@@ -21,7 +21,7 @@ def __serialize_example(filepath, label):
      label as a int64-feature.
      @return: the serialized example."""
     img_bytes = open(filepath, 'rb').read()
-    filepath_bytes = os.path.split(filepath)[1].encode('utf-8')
+    filepath_bytes = str(Path(*filepath.parts[-2:])).encode('utf-8')
     feature = {
         'image_raw': __bytes_feature(img_bytes),
         'label': __int64_feature(label),
@@ -45,7 +45,7 @@ def __write_tf_record(files, savepath, count_classes_dict):
         for filepath, label in files:
             count_classes_dict[label] += 1
             example = __serialize_example(filepath, label)
-            """ Write serialized example to TFRecord file """
+            # Write serialized example to TFRecord file
             writer.write(example.SerializeToString())
 
     return count_classes_dict
@@ -62,7 +62,7 @@ def write_train_test_val_json(dataset, train_files, val_files, test_files):
     Create count classes dict with frequency per class. """
     count_classes_dict = defaultdict()
 
-    for x in dataset.reverse_dictionary:
+    for x in dataset.dictionary:
         count_classes_dict[x] = 0
 
     count_classes_dict = __write_tf_record(train_files, dataset.tf_record_train,
@@ -80,7 +80,7 @@ def write_train_test_val_json_without_test(dataset, train_files, val_files, test
     set without known labels."""
     count_classes_dict = defaultdict()
 
-    for x in dataset.reverse_dictionary:
+    for x in dataset.dictionary:
         count_classes_dict[x] = 0
 
     count_classes_dict = __write_tf_record(train_files, dataset.tf_record_train,
@@ -89,3 +89,5 @@ def write_train_test_val_json_without_test(dataset, train_files, val_files, test
                                            count_classes_dict)
     __write_json(dataset.count_json, count_classes_dict)
     __write_tf_record(test_files, dataset.tf_record_test, count_classes_dict)
+
+

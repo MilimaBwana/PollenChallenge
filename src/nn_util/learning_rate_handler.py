@@ -55,16 +55,16 @@ class PlateauDecay:
         current_monitor = self.monitor.result()
 
         if self.monitor_op(current_monitor - self.min_delta, self.best):
-            """ Current epoch better """
+            # Current epoch better
             self.best = current_monitor
             self.wait = 0
 
         else:
-            """ Current epoch worse """
+            # Current epoch worse
             self.wait += 1
 
             if self.wait >= self.patience:
-                """ Decay learning rate, if monitored quantity gets worse or is on a plateau """
+                # Decay learning rate, if monitored quantity gets worse or is on a plateau
                 old_lr = self.model.optimizer.lr.read_value()
                 self.model.optimizer.lr.assign(old_lr * self.decay_rate)
                 print("Reduced learning_rate to {}".format(self.model.optimizer.lr.read_value()))

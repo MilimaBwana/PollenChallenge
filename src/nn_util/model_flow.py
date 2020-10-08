@@ -3,7 +3,7 @@ from config import config as cfg
 from config import util_ops
 from preprocessing import tf_record_reader, tf_record_writer
 from nn_util import metrics, weighted_gradients, tensorboard_ops, checkpoint_handler, regularization, \
-    learning_rate_handler, logger, explainer
+    learning_rate_handler, logger
 import re
 
 
@@ -15,7 +15,7 @@ def train_step(model, sample_batch):
     @return Nothing."""
     images, labels, _ = sample_batch
 
-    with tf.GradientTape() as tape:  # automatic differentation
+    with tf.GradientTape() as tape:
         logits = model(images, training=True)
         per_sample_loss = model.loss_object(y_pred=logits, y_true=labels)
 
@@ -130,30 +130,29 @@ def train_val_predict(model, debugging=False):
     @return: Nothing
     """
 
-    if model.params['weighted_gradients'] != 'None':
-        """ Load class frequencies for weighted gradients. """
-        model.params['class_frequencies'] = weighted_gradients.create_frequency_dict(model.params['dataset'].count_json)
+    # Load class frequencies for weighted gradients.
+    model.params['class_frequencies'] = weighted_gradients.create_frequency_dict(model.params['dataset'].count_json)
 
     ds_train = tf_record_reader.read(tf.estimator.ModeKeys.TRAIN, model.params)
     ds_val = tf_record_reader.read(tf.estimator.ModeKeys.EVAL, model.params)
     ds_test = tf_record_reader.read(tf.estimator.ModeKeys.PREDICT, model.params)
 
-    """ Define log directories for tensorboard and checkpoints """
+    # Define log directories for tensorboard and checkpoints
     log_dir = cfg.LOG_DIR + '/' + model.params['name']
     train_log_dir = log_dir + '/train/'
     val_log_dir = log_dir + '/val/'
     predict_log_dir = log_dir + '/predict/'
     checkpoints_dir = cfg.CHKPT_DIR + '/' + model.params['name']
 
-    """ Clear log folders """
+    # Clear log folders
     util_ops.clear_directory(train_log_dir, clear_subdirectories=True)
     util_ops.clear_directory(val_log_dir, clear_subdirectories=True)
     util_ops.clear_directory(checkpoints_dir)
     util_ops.clear_directory(predict_log_dir, clear_subdirectories=True)
 
-    """Define logger across all iterations."""
+    # Define logger across all iterations.
     metric_logger = logger.MetricLogger(model, log_dir, model.val_f1score, min_delta=0.005, mode='max')
-    cm_logger = logger.ConfusionMatrixLogger(model, predict_log_dir + 'images', model.params['dataset'].dictionary)
+    cm_logger = logger.ConfusionMatrixLogger(model, predict_log_dir + 'images', model.params['dataset'].reverse_dictionary)
 
     #if re.match('[a-zA-Z]+_15$', model.params['dataset'].name) or re.match('[a-zA-Z]+_31$', model.params['dataset'].name):
     prediction_logger = logger.PredictionJsonLogger(model, predict_log_dir + 'json', class_shift=0)
@@ -163,8 +162,6 @@ def train_val_predict(model, debugging=False):
 
     for iteration in range(1, model.params['iterations'] + 1):
         print('--------------------------------\nIteration ' + str(iteration) + '\n--------------------------------')
-        """ Create new tf records."""
-        # tf_record_writer.write(model.params['dataset_name'], read_csv=False)
 
         train_val(model=model, debugging=debugging, ds_train=ds_train, ds_val=ds_val, train_log_dir=train_log_dir,
                   val_log_dir=val_log_dir, checkpoints_dir=checkpoints_dir, metric_logger=metric_logger,
@@ -204,11 +201,11 @@ def train_val(model, debugging, ds_train, ds_val, train_log_dir, val_log_dir, ch
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
     val_summary_writer = tf.summary.create_file_writer(val_log_dir)
 
-    """ Define checkpoint handler: best_checkpoint. """
+    # Define checkpoint handler: best_checkpoint.
     ckpt_handler = checkpoint_handler.BestEpochCheckpoint(model, checkpoints_dir, 10, model.val_f1score,
                                                           min_delta=0.005, mode='max')
 
-    """ Define learning rate strategy. """
+    # Define learning rate strategy.
     if model.params['lr_strategy'].lower() == 'plateaudecay':
         lr_handler = learning_rate_handler.PlateauDecay(model, model.val_f1score, min_delta=0.005, patience=4,
                                                         mode='max',
@@ -225,7 +222,7 @@ def train_val(model, debugging, ds_train, ds_val, train_log_dir, val_log_dir, ch
     for epoch in range(1, model.params['epochs'] + 1):
         print('Epoch:' + str(epoch))
 
-        """ Training """
+        # Training
         sample_nr = 0
         for sample in ds_train:
             train_step(model, sample)
@@ -240,7 +237,7 @@ def train_val(model, debugging, ds_train, ds_val, train_log_dir, val_log_dir, ch
                 for metric in model.train_metrics:
                     tf.summary.scalar(metric.name, metric.result(), step=epoch)
 
-        """ Validation """
+        # Validation
         sample_nr = 0
         for sample in ds_val:
 
@@ -274,7 +271,6 @@ def train_val(model, debugging, ds_train, ds_val, train_log_dir, val_log_dir, ch
         lr_handler.on_epoch_end()
         metric_logger.on_epoch_end(epoch)
 
-
         for metric in model.train_metrics:
             metric.reset_states()
 
@@ -282,7 +278,7 @@ def train_val(model, debugging, ds_train, ds_val, train_log_dir, val_log_dir, ch
             metric.reset_states()
 
     if model.params['normalized_weights'].lower() == 'wvn':
-        regularization.rescale_weights_classification_layer(model, model.params['class_frequencies'], gamma=0.2)
+        regularization.rescale_weights_classification_layer(model, model.params['class_frequencies'], gamma=0.3)
     metric_logger.on_train_val_end(iteration)
 
 
@@ -307,7 +303,7 @@ def predict(model, debugging, ds_test, predict_log_dir, checkpoints_dir, metric_
 
     predict_log_dir_metrics = predict_log_dir + 'metrics'
 
-    """ Load pretrained model. """
+    # Load pretrained model.
     checkpoint = tf.train.Checkpoint(net=model)
     status = checkpoint.restore(tf.train.latest_checkpoint(checkpoints_dir))
     status.assert_existing_objects_matched()
@@ -321,19 +317,15 @@ def predict(model, debugging, ds_test, predict_log_dir, checkpoints_dir, metric_
         predict_step(model, sample, prediction_logger)
         if debugging and sample_nr == 1:  # Testing
             break
-        ''' if sample_nr == 0:
-            explainer.LimeExplainer(model, predict_log_dir + '/lime')
-            explainer.explain(sample)'''
         sample_nr += 1
 
     with predict_summary_writer.as_default():
         for metric in model.predict_metrics:
             tf.summary.scalar(metric.name, metric.result(), step=1)
-            tf.summary.scalar(metric.name, metric.result(), step=1)
 
     metric_logger.on_predict_end()
     cm_logger.on_predict_end(model.predict_recall.get_confusion_matrix())
-    # TODO: @tf.function compatible
+    # TODO: @tf.function compatible, currently not possible: https://github.com/tensorflow/tensorflow/issues/40276
     prediction_logger.on_predict_end(iteration)
 
     template = 'Precision: {}, Recall: {}, F1-score: {}, F1-Score(bottomClasses): {}'

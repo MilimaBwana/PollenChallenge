@@ -47,14 +47,14 @@ class BestEpochCheckpoint:
         current_monitor = self.monitor.result()
 
         if self.monitor_op(current_monitor - self.min_delta, self.best):
-            """ Current epoch better. """
+            # Current epoch better.
             self.best = current_monitor
             self.wait = 0
             save_path = self.manager.save(checkpoint_number=epoch)
             print("Saved checkpoint for epoch {}: {}".format(epoch, save_path))
 
         else:
-            """ Current epoch worse. """
+            # nCurrent epoch worse.
             self.wait += 1
 
 

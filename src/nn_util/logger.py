@@ -25,7 +25,7 @@ class MetricLogger:
 
     def __init__(self, model, directory, monitor, min_delta=0.01, mode='max'):
         self.model = model
-        file = 'logfile_' + self.model.name + '_' + datetime.datetime.now().strftime('%d.%m.%Y-%H:%M') + ".txt"
+        file = self.model.params['name'] + '_logfile_' + datetime.datetime.now().strftime('%d.%m.%Y-%H:%M') + ".txt"
         Path(directory).mkdir(parents=True, exist_ok=True)
         self.save_path = os.path.join(directory, file)
         self.monitor = monitor
@@ -71,7 +71,7 @@ class MetricLogger:
         current_monitor = self.monitor.result()
 
         if self.monitor_op(current_monitor - self.min_delta, self.best_monitor):
-            """ Current epoch better. """
+            # Current epoch better.
             self.best_epoch = epoch
             self.best_monitor = current_monitor
 
@@ -89,7 +89,7 @@ class MetricLogger:
         @return: Nothing.
         """
         with open(self.save_path, "a") as writer:
-            """ Write metric results to logfile."""
+            # Write metric results to logfile.
             writer.write('\nRun: ' + str(iteration))
             writer.write('\tBest Epoch: ' + str(self.best_epoch) + '\n')
             writer.write('\tTraining: \n')
@@ -102,7 +102,7 @@ class MetricLogger:
                 self.total_val_metrics_result[key].append(value.numpy())
                 writer.write('\t\t' + key + ': ' + str(value.numpy()) + '\n')
 
-        """ Reset metrics."""
+        # Reset metrics.
         self.best_epoch = 0
         self.train_metric_results = defaultdict(float)
         self.val_metric_results = defaultdict(float)
@@ -188,7 +188,7 @@ class ConfusionMatrixLogger:
             cm_image = tensorboard_ops.plot_confusion_matrix(self.total_cm,
                                                              class_names=
                                                              list(self.dictionary.keys()),
-                                                             title = 'Confusion Matrix Predictions')
+                                                             title='Confusion Matrix Predictions')
             tf.summary.image('Confusion matrix - Complete Run', cm_image,
                              max_outputs=3, step=0)
 
@@ -197,6 +197,8 @@ class PredictionJsonLogger:
     """
     Class to log the filenames and predicted labels in the testset. After each iteration, the filenames and predicted
     labels are saved in a json file.
+    Currently not working with @tf.function due to issues with tf.TensorArray
+    (https://github.com/tensorflow/tensorflow/issues/40276)
     Arguments:
         model: model that is being trained
         directory: the path to a directory in which to write the logfile.
@@ -290,7 +292,7 @@ class ValidationMetricLogger:
             tmp_dict = {'Epoch': str(epoch), 'Metrics': report}
             file.write(json.dumps(tmp_dict) + '\n\n')
 
-        """ Reset TensorArrays."""
+        # Reset TensorArrays.
         self.index = 0
         self.y_true_list.close()
         self.y_pred_list.close()

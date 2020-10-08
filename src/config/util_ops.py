@@ -96,6 +96,26 @@ def shift_labels_in_json(path_to_json, shift=2):
         json.dump(shifted_list, file)
 
 
+def create_dict_and_reverse_dict(name_classes):
+    """
+    Creates dictionary and reverse_dictionary from name_classes.
+    In name_classes, each class needs to be written in seperate line among each other.
+    Reverse Dictionary: keys: names, values: int-labels
+    Dictionary: keys: int-labels, values: names
+    @param name_classes:
+    @return:
+    """
+
+    dictionary = {}
+    with open(name_classes) as f:
+        for idx, val in enumerate(f):
+            dictionary[idx] = val.strip('\n')
+
+    reverse_dictionary = {v: k for k, v in dictionary.items()}
+
+    return dictionary, reverse_dictionary
+
+
 
 
 

@@ -11,7 +11,7 @@ def augment(img):
     augmentation_functions = [__rotate, __flip_left_right, __flip_up_down, __crop, __noise]
 
     for f in augmentation_functions:
-        """ Probability of augmenting is 0.75. """
+        # Probability of augmenting is 0.75.
         img = f(img) if np.random.uniform(low=0, high=1, size=None) >= 0.25 else img
 
     return img

@@ -1,8 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import tensorflow as tf
 from nn_util import metrics, model_reset
-import re
-from config import config as cfg
 
 '''
 class Meta(ABCMeta):
@@ -43,7 +41,7 @@ class AbstractNN(tf.keras.Model, metaclass=ABCMeta):
 
         self.params['num_classes'] = self.params['dataset'].num_classes
 
-        """ Train metrics."""
+        # Train metrics.
         self.train_metrics = []
         self.train_loss = tf.keras.metrics.Mean('loss')
         self.train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
@@ -62,7 +60,7 @@ class AbstractNN(tf.keras.Model, metaclass=ABCMeta):
             [self.train_precision, self.train_recall, self.train_f1score, self.train_f1score_bottom11, self.train_loss,
              self.train_accuracy])
 
-        """ Validation metrics. """
+        # Validation metrics.
         self.val_metrics = []
         self.val_loss = tf.keras.metrics.Mean('loss')
         self.val_accuracy = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
@@ -81,7 +79,7 @@ class AbstractNN(tf.keras.Model, metaclass=ABCMeta):
             [self.val_precision, self.val_recall, self.val_f1score, self.val_f1score_bottom11, self.val_loss,
              self.val_accuracy])
 
-        """Predict metrics. """
+        # Predict metrics.
         self.predict_metrics = []
         self.predict_accuracy = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
         self.predict_recall = metrics.MultiClassRecall(name='recall', num_classes=self.params['num_classes'],

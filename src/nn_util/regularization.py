@@ -50,7 +50,7 @@ def rescale_weights_classification_layer(model, frequency_dict, gamma=0.3):
     @return Nothing."""
 
     max_frequency = tf.math.reduce_max(frequency_dict.export()[1])
-    """ Possible not ordered keys in frequency_dict should be ordered.. """
+    # Possible not ordered keys in frequency_dict should be ordered..
     ordered_frequencies = tf.gather(frequency_dict.export()[1], indices=tf.argsort(frequency_dict.export()[0]))
     rescale_factor = tf.math.pow(tf.math.divide_no_nan(max_frequency, ordered_frequencies),
                                  gamma)  # Shape (num_classes)

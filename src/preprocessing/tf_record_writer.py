@@ -1,56 +1,120 @@
 import sys
 import os
+import random
 import argparse
-import re
 
-""" Syspath needs to include parent directory "pollen classification" and "Code" to find sibling 
-modules and database."""
+""" Syspath needs to include parent directory "pollen_classification" to find sibling modules ."""
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + "/"
 sys.path.append(file_path)
 
+
+from config import config as cfg
+from preprocessing import record_write_ops, pipeline_ops
 from config import dataset_config
-from preprocessing.augsburg_data import tf_record_writer_augsburg as augsburg_writer
-from preprocessing.italian_data import tf_record_writer_italian as italian_writer
 
 
 def main():
     parser = argparse.ArgumentParser(description='Tf Record Writer Parameter.')
     parser.add_argument('--dataset_name', type=str,
-                        help='Used Dataset. Original_[4|15|30] or upsample_[4|15|30] or downsample_[15|30]')
-    parser.add_argument('-read_csv', action='store_true', help='Test/val split according to csv files.')
+                        help='Used Dataset. Original_4 or upsample_4')
     args = parser.parse_args()
 
-    dataset_name = 'upsample_4'
+    dataset_name = 'original_4'
 
     if args.dataset_name:
         dataset_name = args.dataset_name.lower()
 
-    read_csv = args.read_csv
-    write(dataset_name, read_csv)
+    write(dataset_name)
 
 
-def write(dataset_name, read_csv=False):
+def write(dataset_name, mask='object'):
+    dataset = dataset_config.Dataset(dataset_name)
+    if cfg.UPSAMPLE_NAME in dataset.name.lower():
+        __write_upsample(dataset, mask=mask)
+    elif cfg.ORIGINAL_NAME in dataset.name.lower():
+        __write_original(dataset, mask=mask)
+    else:
+        raise ValueError('No valid dataset')
+
+
+def __write_original(dataset, mask='object'):
     """
-    Calls the corresponding tfRecordWriter for a dataset_name. A different tfRecordWriter is specified for each data
-    record because of the different structure within the data. Acts as a facade for the different implementations.
-    @param dataset_name: Name of the dataset, also containing number of classes after '_'
-    @param read_csv: if true, train/val/test-split is done according to csv-file. Only available for dataset_name
-        'original_4'.
+    Write tf records and json-files for the original dataset. Files in train directory are splitted into train
+    and val files. Test set is an extra directory.
+    @param dataset: Dataset object, i.a. containing number of classes
+    @param mask: images used in italian dataset. Can be 'object', 'mask' or 'segmentation'. Default 'object'.
     @return: Nothing
     """
-    print('Start writing tf_records ...')
 
-    dataset = dataset_config.Dataset(dataset_name)
-    # TODO: To be edited if new dataset
-    if re.match('[a-zA-Z]+_4$', dataset.name):
-        italian_writer.write(dataset=dataset, mask='object')
-    elif re.match('[a-zA-Z]+_15$', dataset.name):
-        augsburg_writer.write(dataset=dataset, read_from_csv=read_csv)
-    elif re.match('[a-zA-Z]+_31$', dataset.name):
-        augsburg_writer.write(dataset=dataset)
-    else:
-        raise ValueError('No valid name: Number after _ must be 4, 30 or 15.')
-    print('Finish writing tf_records ...')
+    labeled_subdirectories_trainval = pipeline_ops.get_labeled_valid_subdirectories(dataset.name,
+                                                                                    os.path.join(dataset.data_dir,
+                                                                                                 'train'),
+                                                                                    mask=mask)
+    labeled_subdirectories_test = pipeline_ops.get_labeled_valid_subdirectories(dataset.name,
+                                                                        os.path.join(dataset.data_dir, 'test'),
+                                                                        mask='None')
+
+    # Create (filepath,label)-List with int-label for all png images
+    labeled_file_paths_trainval = pipeline_ops.get_labeled_png_paths(labeled_subdirectories_trainval)
+    length_all_files = len(labeled_file_paths_trainval)
+    test_files = pipeline_ops.get_labeled_png_paths(labeled_subdirectories_test)
+
+    # Split file names into train and val, test has own directory
+    random.shuffle(labeled_file_paths_trainval)
+    number_train_samples = int((cfg.TRAIN_SPLIT / (cfg.TRAIN_SPLIT + cfg.VAL_SPLIT)) * length_all_files)
+
+    train_files = labeled_file_paths_trainval[:number_train_samples]
+    val_files = labeled_file_paths_trainval[number_train_samples:]
+
+    record_write_ops.write_train_test_val_json(dataset, train_files, val_files, test_files)
+
+
+def __write_upsample(dataset, mask='object'):
+    """
+    Write tf records and json-files for the upsampled dataset. Files in train directory are splitted into train
+    and val files. Test set is an extra directory.
+    @param dataset: Dataset object, i.a. containing number of classes
+    @param mask: images used in italian dataset. Can be 'object', 'mask' or 'segmentation'. Default 'object'.
+    @return: Nothing
+    """
+
+    labeled_subdirectories_trainval = pipeline_ops.get_labeled_valid_subdirectories(dataset.name,
+                                                                                    os.path.join(dataset.data_dir,
+                                                                                                 'train'),
+                                                                                    mask=mask)
+    labeled_subdirectories_test = pipeline_ops.get_labeled_valid_subdirectories(dataset.name,
+                                                                        os.path.join(dataset.data_dir, 'test'),
+                                                                        mask='None')
+    labeled_subdirectories_original = [x for x in labeled_subdirectories_trainval if
+                                       cfg.UPSAMPLE_DIR_EXTENSION not in x[0]]
+    labeled_subdirectories_upsample = [x for x in labeled_subdirectories_trainval if
+                                       cfg.UPSAMPLE_DIR_EXTENSION in x[0]]
+
+    # Create (filepath,label)-List with int-label for all png images
+    labeled_file_paths_original = pipeline_ops.get_labeled_png_paths(labeled_subdirectories_original)
+    labeled_file_paths_upsample = pipeline_ops.get_labeled_png_paths(labeled_subdirectories_upsample)
+    test_files = pipeline_ops.get_labeled_png_paths(labeled_subdirectories_test)
+    length_all_files = len(labeled_file_paths_original) + len(labeled_file_paths_upsample)
+
+    assert (length_all_files > 0), "No images in given root path"
+
+    random.shuffle(labeled_file_paths_upsample)
+    random.shuffle(labeled_file_paths_original)
+
+    number_train_samples = int((cfg.TRAIN_SPLIT / (cfg.TRAIN_SPLIT + cfg.VAL_SPLIT)) * length_all_files)
+
+    assert len(
+        labeled_file_paths_upsample) < 0.5 * number_train_samples, "Training set must consist of 50 or more " \
+                                                                   "percent original images."
+
+    # Split file names into train, val and test. Upsampled images are only in the train set.
+    number_train_samples_original = int(number_train_samples - len(labeled_file_paths_upsample))
+    train_files = labeled_file_paths_upsample + labeled_file_paths_original[
+                                                :number_train_samples_original]
+    random.shuffle(train_files)
+    val_files = labeled_file_paths_original[number_train_samples_original:]
+
+    record_write_ops.write_train_test_val_json(dataset, train_files, val_files, test_files)
 
 
 if __name__ == "__main__":
