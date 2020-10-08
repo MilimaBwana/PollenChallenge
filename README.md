@@ -10,6 +10,7 @@ Alternatively, installing the following package should install the other needed 
 - matplotlib==3.3.0
 - opencv-python==4.3.0.36
 - pytest==6.0.0
+<<<<<<< HEAD
 - notebook==6.1.3
 - scikit-learn==0.23.1
 - tensorflow(-gpu)==2.3.0
@@ -70,3 +71,6 @@ python -u ./nn_models/transfer_learning_cnn.py --name TransferLearningCNN --data
 - A confusion matrix is plotted for the performance of the test set, averaged over the number of iterations.
 - Log files and checkpoints for a model are saved under nn_models/logs/<model_name> by default. You can change it by adjusting LOG_DIR and CHKPT_DIR in config/config.py.
 
+=======
+- tensorflow(-gpu)==2.2.1
+>>>>>>> f4af0d79d81e91722f088da541c304cbf9917c9d
