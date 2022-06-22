@@ -24,7 +24,7 @@ Markdown==3.2.2
 matplotlib==3.3.0
 more-itertools==8.4.0
 networkx==2.4
-numpy==1.19.1
+numpy==1.22.0
 oauthlib==3.1.0
 opencv-python==4.3.0.36
 opt-einsum==3.3.0
